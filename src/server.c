@@ -97,22 +97,49 @@ void initServer(unsigned int port, unsigned int clientsNumb){
 
 }
 
+void requestParser(char *text, struct Request *req){
+	char *prt;
+	char rest[strlen(text)];
+	strcpy(rest,text);
+	prt = strtok(rest, "\n");
+	while (prt){
+		//printf("-> %s|\n", prt);
+		prt = strtok(NULL, "\n");
+	}
+	/*char *method = strtok(prt, " ");
+	printf("that's my method -> %s\n", method);
+	char *URL = strtok(NULL, " ");
+	printf("that's my URL -> %s\n", URL);*/
+}
+
 void listenServer(){
 	int connfd = 0;
 	char sendBuff[1024];
-	char readBuff[1024];
+	char *readBuff = (char *)malloc(1*sizeof(char));
+	char *chunk = (char *)malloc(64*sizeof(char));
+
+	int reqSize = 0;
+
 	memset(sendBuff, '0', sizeof(sendBuff));
-	memset(readBuff, ' ', sizeof(readBuff));
+
+	struct Request req;
+	int bit = 0;
+
 	while(1){
 		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
 
 		respToStr(sendBuff, stdResp);
-		read(connfd, readBuff, strlen(readBuff));
+		while ((bit = recv(connfd, chunk, 64, 0)) >= 64){
+			reqSize += bit;
+			readBuff = (char *)realloc(readBuff, reqSize*sizeof(char));
+			strcat(readBuff, chunk);
+		}
+		requestParser(readBuff, &req);
 		write(connfd, sendBuff, strlen(sendBuff));
 
 		close(connfd);
 		if(signal_inter){
-			printf("donkey died. Sorry donkey\n");
+			printf("\ndonkey died. Sorry donkey\n");
 			close(listenfd);
 			exit(0);
 		}
