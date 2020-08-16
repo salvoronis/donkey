@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include "./server.h"
 
+#define CHUNKS 50
+
 int listenfd = 0;
 int signal_inter = 0;
 
@@ -127,7 +129,7 @@ void listenServer(){
 	int connfd = 0;
 	char sendBuff[1024];
 	char *readBuff = (char *)malloc(1*sizeof(char));
-	char *chunk = (char *)malloc(64*sizeof(char));
+	char *chunk = (char *)malloc(CHUNKS*sizeof(char));
 
 	int reqSize = 0;
 
@@ -140,14 +142,15 @@ void listenServer(){
 		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
 
 		respToStr(sendBuff, stdResp);
-		while ((bit = recv(connfd, chunk, 64, 0)) >= 64){
+		do{
+			bit = recv(connfd, chunk, CHUNKS, 0);
+			chunk = (char *)realloc(chunk,bit*sizeof(char));
 			reqSize += bit;
 			readBuff = (char *)realloc(readBuff, reqSize*sizeof(char));
 			strcat(readBuff, chunk);
-		}
-		readBuff = (char *)realloc(readBuff, reqSize*sizeof(char));
-		strcat(readBuff,"\0");
-		printf("%s\n\n\n\n",readBuff);
+			memset(chunk,0,strlen(chunk));
+		} while ( bit >= CHUNKS);
+		chunk = (char *)realloc(chunk,CHUNKS*sizeof(char));
 		requestParser(readBuff, &req);
 		write(connfd, sendBuff, strlen(sendBuff));
 		
