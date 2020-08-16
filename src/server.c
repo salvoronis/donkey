@@ -101,15 +101,26 @@ void requestParser(char *text, struct Request *req){
 	char *prt;
 	char rest[strlen(text)];
 	strcpy(rest,text);
-	prt = strtok(rest, "\n");
+	LinkedList *headers = NULL;
+
+	prt = strtok(rest, " \n");
+	req->method = prt;
+
+	prt = strtok(NULL, " \n");
+	req->URL = prt;
+
+	prt = strtok(NULL,":\n");
+	req->proto = prt;
+
+	prt = strtok(NULL,":\n");
 	while (prt){
-		//printf("-> %s|\n", prt);
+		struct Header header;
+		header.name = prt;
 		prt = strtok(NULL, "\n");
+		header.value = prt;
+		prt = strtok(NULL, ":");
+		push(&headers, &header, sizeof(header));
 	}
-	/*char *method = strtok(prt, " ");
-	printf("that's my method -> %s\n", method);
-	char *URL = strtok(NULL, " ");
-	printf("that's my URL -> %s\n", URL);*/
 }
 
 void listenServer(){
@@ -134,17 +145,18 @@ void listenServer(){
 			readBuff = (char *)realloc(readBuff, reqSize*sizeof(char));
 			strcat(readBuff, chunk);
 		}
+		readBuff = (char *)realloc(readBuff, reqSize*sizeof(char));
+		strcat(readBuff,"\0");
+		printf("%s\n\n\n\n",readBuff);
 		requestParser(readBuff, &req);
 		write(connfd, sendBuff, strlen(sendBuff));
-
+		
+		readBuff = (char *)realloc(readBuff, 1);
 		close(connfd);
 		if(signal_inter){
-			printf("\ndonkey died. Sorry donkey\n");
+			printf("\n\ndonkey died. Sorry donkey\n");
 			close(listenfd);
 			exit(0);
 		}
 	}
 }
-
-//TODO request parser
-//after that finally can start making handlers
