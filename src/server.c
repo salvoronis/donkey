@@ -41,7 +41,6 @@ int cmpStr(void *a, void *b){
 int cmpHeader(void *a, void *b){
 	char *tmp1 = (char *)a;
 	struct Header *tmp2 = (struct Header *)b;
-	//printf("tmp1 - '%s'\ntmp2 - '%s'\n%d %d %d\n",tmp1,tmp2->name,strcmp(tmp1,tmp2->name), strlen(tmp1), strlen(tmp2->name));
 	int result = strcmp(tmp1,tmp2->name);
 	return result;
 }
@@ -109,7 +108,7 @@ void initServer(unsigned int port, unsigned int clientsNumb){
 
 void requestParser(char *text, struct Request *req){
 	char *prt;
-	char rest[strlen(text)];
+	char *rest = malloc(strlen(prt));
 	strcpy(rest,text);
 	LinkedList *headers = NULL;
 
@@ -124,17 +123,7 @@ void requestParser(char *text, struct Request *req){
 
 	prt = strtok(NULL,":\n");
 	struct Header *header = (struct Header*)malloc(0);
-	/*while (prt){
-		header.name = (char *)malloc(strlen(prt));
-		strcpy(header.name,prt);
-		prt = strtok(NULL, "\n");
-		if (prt == NULL)
-			break;
-		header.value = (char *)malloc(strlen(prt));
-		strcpy(header.value, prt);
-		push(&headers, &header, sizeof(header));
-		prt = strtok(NULL, ":");
-	}*/
+
 	int headerSize = 0;
 	while (prt){
 		header = (struct Header*)realloc(header, (headerSize+1)*sizeof(struct Header));
@@ -143,24 +132,11 @@ void requestParser(char *text, struct Request *req){
 		if (prt == NULL)
 			break;
 		(header + headerSize)->value = prt;
-		//push(&headers, header+headerSize, sizeof(header));
 		prt = strtok(NULL, ":");
 		headerSize++;
-		/*header.name = (char *)malloc(strlen(prt));
-		strcpy(header.name,prt);
-		prt = strtok(NULL, "\n");
-		if (prt == NULL)
-			break;
-		header.value = (char *)malloc(strlen(prt));
-		strcpy(header.value, prt);
-		push(&headers, &header, sizeof(header));
-		prt = strtok(NULL, ":");*/
 	}
 	for (int i = 0; i < headerSize; i++){
-		printf("name %s value %s\n",(header+i)->name,(header + i)->value);
 		push(&headers,(header+i), sizeof(struct Header));
-		//struct Header *test = (struct Header*)headers->data;
-		//printf("name1 %s value1 %s\n",test->name,test->value);
 	}
 	req->headers = headers;
 
@@ -168,7 +144,6 @@ void requestParser(char *text, struct Request *req){
 	struct Header *test;
 	while (node != NULL) {
 		test = (struct Header*)node->data;
-		printf("->%s%s\n",test->name, test->value);
 		node = node->next;
 	}
 }
@@ -187,7 +162,6 @@ void listenServer(){
 	int bit = 0;
 
 	while(1){
-		//struct Request req;
 		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
 
 		respToStr(sendBuff, stdResp);
@@ -201,7 +175,6 @@ void listenServer(){
 		} while ( bit >= CHUNKS);
 		chunk = (char *)realloc(chunk,CHUNKS*sizeof(char));
 
-		printf("%s\n",readBuff);
 		//test -> passed! I'll use it later
 		//func to parse http body but only if it's correct
 		/*int contentLen = 21;
@@ -211,20 +184,16 @@ void listenServer(){
 			body[contentLenRev] = readBuff[strlen(readBuff)-contentLen-1];
 		}*/
 		//test
-
+		printf("%s\n",readBuff);
 		requestParser(readBuff, &req);
 		LinkedList *node = req.headers;
 		struct Header *test;
 		while (node != NULL) {
 			test = (struct Header*)node->data;
-			printf("'%s'%s'\n",test->name, test->value);
 			node = node->next;
 		}
 
-		char *length;
-		//getHeaderByName(length, "Content-Length", &req);
-		printf("value -> %s\n",getHeaderByName(length,"Content-Length", &req));
-		free(length);
+		printf("value -> %s\n",getHeaderByName("Content-Lenght", &req));
 
 		write(connfd, sendBuff, strlen(sendBuff));
 		
@@ -238,11 +207,9 @@ void listenServer(){
 	}
 }
 
-char *getHeaderByName(char *dest, char *value, struct Request *req){
+char *getHeaderByName(char *value, struct Request *req){
 	LinkedList *headers = req->headers;
 	LinkedList *headNode = getByNameNode(headers,value,cmpHeader);
 	struct Header *header = (struct Header*)headNode->data;
-	//dest = (char *)malloc(strlen(header->value));
-	//strcpy(dest,header->value);
 	return header->value;
 }

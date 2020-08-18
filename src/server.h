@@ -16,4 +16,4 @@ typedef struct Request{
 	char *proto;
 	LinkedList *headers;
 }Request;
-char *getHeaderByName(char *dest, char *value, struct Request *req);
+char *getHeaderByName(char *value, struct Request *req);

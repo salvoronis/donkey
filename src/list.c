@@ -20,7 +20,7 @@ void pushArr(LinkedList **head, unsigned char num, int data_size, void *value, .
 
 void push(LinkedList **head, void *value, int data_size){
 	LinkedList *tmp = (LinkedList*) malloc(sizeof(LinkedList));
-	//tmp->data = malloc(data_size);
+	tmp->data = malloc(data_size);
         tmp->data = value;
 	tmp->next = (*head);
         (*head) = tmp;
