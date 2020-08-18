@@ -159,15 +159,17 @@ void requestParser(char *text, struct Request *req){
 	for (int i = 0; i < headerSize; i++){
 		printf("name %s value %s\n",(header+i)->name,(header + i)->value);
 		push(&headers,(header+i), sizeof(struct Header));
+		//struct Header *test = (struct Header*)headers->data;
+		//printf("name1 %s value1 %s\n",test->name,test->value);
 	}
 	req->headers = headers;
 
-	//LinkedList *node = getByNameNode(headers,"Accept",cmpHeader);
-	struct Header *test/* = (struct Header*)headers->next->data*/;
-	while (headers != NULL) {
-		test = (struct Header*)headers->data;
-		printf("'%s''%s'\n",test->name, test->value);
-		headers = headers->next;
+	LinkedList *node = req->headers;
+	struct Header *test;
+	while (node != NULL) {
+		test = (struct Header*)node->data;
+		printf("->%s%s\n",test->name, test->value);
+		node = node->next;
 	}
 }
 
@@ -185,6 +187,7 @@ void listenServer(){
 	int bit = 0;
 
 	while(1){
+		//struct Request req;
 		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
 
 		respToStr(sendBuff, stdResp);
@@ -210,10 +213,17 @@ void listenServer(){
 		//test
 
 		requestParser(readBuff, &req);
+		LinkedList *node = req.headers;
+		struct Header *test;
+		while (node != NULL) {
+			test = (struct Header*)node->data;
+			printf("'%s'%s'\n",test->name, test->value);
+			node = node->next;
+		}
 
-		char *length = malloc(100);
-		getHeaderByName(length, "Content-Length", &req);
-		printf("value -> %s\n",length);
+		char *length;
+		//getHeaderByName(length, "Content-Length", &req);
+		printf("value -> %s\n",getHeaderByName(length,"Content-Length", &req));
 		free(length);
 
 		write(connfd, sendBuff, strlen(sendBuff));
@@ -228,10 +238,11 @@ void listenServer(){
 	}
 }
 
-void getHeaderByName(char *dest, char *value, struct Request *req){
+char *getHeaderByName(char *dest, char *value, struct Request *req){
 	LinkedList *headers = req->headers;
 	LinkedList *headNode = getByNameNode(headers,value,cmpHeader);
 	struct Header *header = (struct Header*)headNode->data;
-	dest = (char *)realloc(dest, strlen(header->value));
-	strcpy(dest,header->value);
+	//dest = (char *)malloc(strlen(header->value));
+	//strcpy(dest,header->value);
+	return header->value;
 }
