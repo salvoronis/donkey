@@ -14,5 +14,6 @@ typedef struct Request{
 	char *method;
 	char *URL;
 	char *proto;
-	LinkedList headers;
+	LinkedList *headers;
 }Request;
+void getHeaderByName(char *dest, char *value, struct Request *req);
