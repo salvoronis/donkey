@@ -8,6 +8,7 @@
 #include "./crc.h"
 #include <unistd.h>
 #include "./server.h"
+#include "./util.h"
 
 #define CHUNKS 50
 
@@ -29,10 +30,10 @@ struct Header stdHeadersResp[] = {
 
 struct Response stdResp;
 
-void interrupt_signal(int sig){
+/*void interrupt_signal(int sig){
 	printf("%s","\n\ndonkey died. Sorry donkey\n");
 	exit(0);
-}
+}*/
 
 int cmpStr(void *a, void *b){
 	return strcmp((char*) a, (char*)b);
@@ -129,7 +130,7 @@ void requestParser(char *text, struct Request *req){
 		prt = strtok(NULL, "\n");
 		if (prt == NULL)
 			break;
-		(header + headerSize)->value = prt;
+		(header + headerSize)->value = prt+1;
 		prt = strtok(NULL, ":");
 		headerSize++;
 	}
@@ -137,25 +138,14 @@ void requestParser(char *text, struct Request *req){
 		push(&headers,(header+i), sizeof(struct Header));
 	}
 	req->headers = headers;
-	
-	//without that it doesn't work
-	LinkedList *node = req->headers;
-	struct Header *test;
-	while (node != NULL) {
-		test = (struct Header*)node->data;
-		node = node->next;
-	}
 }
 
 void listenServer(){
 	int connfd = 0;
 	char *sendBuff = (char *)malloc(1024*sizeof(char));
-	//char *readBuff = (char *)malloc(1*sizeof(char));
-	//char *chunk = (char *)malloc(CHUNKS*sizeof(char));
 
 	int reqSize = 0;
 
-	//memset(sendBuff, '0', sizeof(sendBuff));
 	respToStr(sendBuff,stdResp);
 
 	struct Request req;
@@ -175,28 +165,23 @@ void listenServer(){
 			strcat(readBuff, chunk);
 			memset(chunk,0,strlen(chunk));
 		} while ( bit >= CHUNKS);
-		//chunk = (char *)realloc(chunk,CHUNKS*sizeof(char));
+		bit = 0;
+		free(chunk);
 
-		//test -> passed! I'll use it later
-		//func to parse http body but only if it's correct
-		/*int contentLen = 21;
-		char body[contentLen];
-		memset(body,'0',strlen(body));
-		for (int contentLenRev = 0; contentLenRev < contentLen; contentLenRev++) {
-			body[contentLenRev] = readBuff[strlen(readBuff)-contentLen-1];
-		}*/
-		//test
-		printf("%s\n",readBuff);
+		char *requestCopy = malloc(strlen(readBuff));
+		strcpy(requestCopy, readBuff);
 		requestParser(readBuff, &req);
 
-		printf("value -> %s\n",getHeaderByName("Content-Lenght", &req));
-
+		int contentLen = atoi(getHeaderByName("Content-Length", &req));
+		char *body = malloc(contentLen * sizeof(char));
+		body = requestCopy + (strlen(requestCopy) - contentLen);
+		req.body = body;
+		//request completed!
+		//put here user's func
 		write(connfd, sendBuff, strlen(sendBuff));
 		
-		//readBuff = (char *)realloc(readBuff, 1);
-		free(chunk);
 		free(readBuff);
-		//sendBuff = (char *)realloc(sendBuff, 1024 * sizeof(char));
+		free(requestCopy);
 		close(connfd);
 	}
 }

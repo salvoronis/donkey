@@ -49,7 +49,7 @@ int deleteLinkedListAfter(LinkedList **prevNode){
 
 LinkedList *getByNameNode(LinkedList *start, void *value, int (*cmp)(void *a, void *b)){
         while (start != NULL) {
-                if (cmp(value, start->data)){
+                if (cmp(value, start->data) == 0){
                         return start;
                 }
                 start = start->next;
