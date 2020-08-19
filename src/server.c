@@ -12,7 +12,6 @@
 #define CHUNKS 50
 
 int listenfd = 0;
-int signal_inter = 0;
 
 struct Header {
 	char *name;
@@ -31,7 +30,8 @@ struct Header stdHeadersResp[] = {
 struct Response stdResp;
 
 void interrupt_signal(int sig){
-	signal_inter = 1;
+	printf("%s","\n\ndonkey died. Sorry donkey\n");
+	exit(0);
 }
 
 int cmpStr(void *a, void *b){
@@ -108,11 +108,9 @@ void initServer(unsigned int port, unsigned int clientsNumb){
 
 void requestParser(char *text, struct Request *req){
 	char *prt;
-	char *rest = malloc(strlen(prt));
-	strcpy(rest,text);
 	LinkedList *headers = NULL;
 
-	prt = strtok(rest, " \n");
+	prt = strtok(text, " \n");
 	req->method = prt;
 
 	prt = strtok(NULL, " \n");
@@ -139,7 +137,8 @@ void requestParser(char *text, struct Request *req){
 		push(&headers,(header+i), sizeof(struct Header));
 	}
 	req->headers = headers;
-
+	
+	//without that it doesn't work
 	LinkedList *node = req->headers;
 	struct Header *test;
 	while (node != NULL) {
@@ -150,21 +149,24 @@ void requestParser(char *text, struct Request *req){
 
 void listenServer(){
 	int connfd = 0;
-	char sendBuff[1024];
-	char *readBuff = (char *)malloc(1*sizeof(char));
-	char *chunk = (char *)malloc(CHUNKS*sizeof(char));
+	char *sendBuff = (char *)malloc(1024*sizeof(char));
+	//char *readBuff = (char *)malloc(1*sizeof(char));
+	//char *chunk = (char *)malloc(CHUNKS*sizeof(char));
 
 	int reqSize = 0;
 
-	memset(sendBuff, '0', sizeof(sendBuff));
+	//memset(sendBuff, '0', sizeof(sendBuff));
+	respToStr(sendBuff,stdResp);
 
 	struct Request req;
 	int bit = 0;
 
 	while(1){
 		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
+		char *readBuff = (char *)malloc(1*sizeof(char));
+		char *chunk = (char *)malloc(CHUNKS*sizeof(char));
 
-		respToStr(sendBuff, stdResp);
+		//respToStr(sendBuff, stdResp);
 		do{
 			bit = recv(connfd, chunk, CHUNKS, 0);
 			chunk = (char *)realloc(chunk,bit*sizeof(char));
@@ -173,7 +175,7 @@ void listenServer(){
 			strcat(readBuff, chunk);
 			memset(chunk,0,strlen(chunk));
 		} while ( bit >= CHUNKS);
-		chunk = (char *)realloc(chunk,CHUNKS*sizeof(char));
+		//chunk = (char *)realloc(chunk,CHUNKS*sizeof(char));
 
 		//test -> passed! I'll use it later
 		//func to parse http body but only if it's correct
@@ -186,24 +188,16 @@ void listenServer(){
 		//test
 		printf("%s\n",readBuff);
 		requestParser(readBuff, &req);
-		LinkedList *node = req.headers;
-		struct Header *test;
-		while (node != NULL) {
-			test = (struct Header*)node->data;
-			node = node->next;
-		}
 
 		printf("value -> %s\n",getHeaderByName("Content-Lenght", &req));
 
 		write(connfd, sendBuff, strlen(sendBuff));
 		
-		readBuff = (char *)realloc(readBuff, 1);
+		//readBuff = (char *)realloc(readBuff, 1);
+		free(chunk);
+		free(readBuff);
+		//sendBuff = (char *)realloc(sendBuff, 1024 * sizeof(char));
 		close(connfd);
-		if(signal_inter){
-			printf("%s","\n\ndonkey died. Sorry donkey\n");
-			close(listenfd);
-			exit(0);
-		}
 	}
 }
 
