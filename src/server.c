@@ -30,11 +30,6 @@ struct Header stdHeadersResp[] = {
 
 struct Response stdResp;
 
-/*void interrupt_signal(int sig){
-	printf("%s","\n\ndonkey died. Sorry donkey\n");
-	exit(0);
-}*/
-
 int cmpStr(void *a, void *b){
 	return strcmp((char*) a, (char*)b);
 }
@@ -79,10 +74,8 @@ void initServer(unsigned int port, unsigned int clientsNumb){
 	stdResp.statusCode = 200;
 	stdResp.proto = "HTTP/1.1";
 	stdResp.headers = node;
-	stdResp.body = "donkey started breath";
+	//stdResp.body = "donkey started breath";
 	//end of standart response
-	char buff[2048];
-	respToStr(buff, stdResp);
 
 	if ((listenfd = socket(AF_INET, SOCK_STREAM,0)) < 0){
 		perror("socket");
@@ -140,13 +133,13 @@ void requestParser(char *text, struct Request *req){
 	req->headers = headers;
 }
 
-void listenServer(){
+void listenServer(void (*example)(struct Request*, struct Response*)){
 	int connfd = 0;
-	char *sendBuff = (char *)malloc(1024*sizeof(char));
+	//char *sendBuff = (char *)malloc(1024*sizeof(char));
 
 	int reqSize = 0;
 
-	respToStr(sendBuff,stdResp);
+	//respToStr(sendBuff,stdResp);
 
 	struct Request req;
 	int bit = 0;
@@ -154,9 +147,11 @@ void listenServer(){
 	while(1){
 		connfd = accept(listenfd, (struct sockaddr*)NULL, NULL);
 		char *readBuff = (char *)malloc(1*sizeof(char));
+		char *sendBuff = (char *)malloc(2048*sizeof(char));
 		char *chunk = (char *)malloc(CHUNKS*sizeof(char));
 
 		//respToStr(sendBuff, stdResp);
+		//receiving data from client
 		do{
 			bit = recv(connfd, chunk, CHUNKS, 0);
 			chunk = (char *)realloc(chunk,bit*sizeof(char));
@@ -167,17 +162,24 @@ void listenServer(){
 		} while ( bit >= CHUNKS);
 		bit = 0;
 		free(chunk);
+		//end of receive
 
 		char *requestCopy = malloc(strlen(readBuff));
 		strcpy(requestCopy, readBuff);
 		requestParser(readBuff, &req);
+		printf("%s\n",requestCopy);
 
 		int contentLen = atoi(getHeaderByName("Content-Length", &req));
-		char *body = malloc(contentLen * sizeof(char));
-		body = requestCopy + (strlen(requestCopy) - contentLen);
-		req.body = body;
+		if (contentLen != 0){
+			char *body = malloc(contentLen * sizeof(char));
+			body = requestCopy + (strlen(requestCopy) - contentLen);
+			req.body = body;
+		}
 		//request completed!
 		//put here user's func
+		example(&req,&stdResp);
+		respToStr(sendBuff,stdResp);
+
 		write(connfd, sendBuff, strlen(sendBuff));
 		
 		free(readBuff);
@@ -189,6 +191,8 @@ void listenServer(){
 char *getHeaderByName(char *value, struct Request *req){
 	LinkedList *headers = req->headers;
 	LinkedList *headNode = getByNameNode(headers,value,cmpHeader);
+	if (headNode == NULL)
+		return "0";
 	struct Header *header = (struct Header*)headNode->data;
 	return header->value;
 }

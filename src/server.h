@@ -2,7 +2,6 @@
 void initServer(unsigned int port, unsigned int clientsNumb);
 extern int listenfd;
 extern int signal_inter;
-void listenServer(void);
 typedef struct Response{
 	char *statusDescription;
 	int statusCode;
@@ -17,4 +16,5 @@ typedef struct Request{
 	char *body;
 	LinkedList *headers;
 }Request;
+void listenServer(void (*example)(struct Request*, struct Response*));
 char *getHeaderByName(char *value, struct Request *req);
