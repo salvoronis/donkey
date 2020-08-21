@@ -1,5 +1,7 @@
 #include "./src/server.h"
 #include <stdio.h>
+#include <string.h>
+#include "./src/map.h"
 
 #define PORT 8081
 
@@ -9,7 +11,18 @@ void example(Request *req, Response *res){
 	res->body=html;
 }
 
+void testfunc(char *anima){
+	printf("%s\n\n\n",anima);
+}
+
 int main(){
+	map *test = initMap(sizeof(char));
+	addToMap(test, testfunc, sizeof(testfunc));
+	void (*anime)(char*);
+	anime = getFromMap(test,testfunc, sizeof(testfunc));
+	anime("holy shit");
+
+
 	initServer(PORT, 10);
 	listenServer(example);
 

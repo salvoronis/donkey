@@ -1,5 +1,5 @@
-SRC=./src/server.c ./src/crc.c ./src/list.c ./src/util.c
-OBJ=server.o crc.o list.o util.o
+SRC=./src/server.c ./src/crc.c ./src/list.c ./src/util.c ./src/map.c
+OBJ=server.o crc.o list.o util.o map.o
 
 all: buildexample
 

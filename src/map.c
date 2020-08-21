@@ -1,9 +1,24 @@
-#include "crc.h"
+#include "./crc.h"
+#include <stdio.h>
 #include <string.h>
+#include "./map.h"
+#include <stdlib.h>
 
-static void (*router[0XFFFF])(void);
+map *initMap(int size){
+	int cell = 0xFFFF;
+	printf("%d\n",cell);
+	map Map = malloc(cell*8);
+	return Map;
+}
 
-void addRout(unsigned char *path, void (*rout)(void)){
-	unsigned short index = Crc16(path, strlen(path));
-	router[index] = rout;
+void addToMap(map *dest, void *a, int size){
+	unsigned int place = Crc16(a,size);
+	*(place+dest) = malloc(size);
+	*(place+dest) = a;
+}
+
+void *getFromMap(map *from, void *a, int size){
+	unsigned short place = Crc16(a,size);
+	printf("hoba2 -> %d\n",place);
+	return *(from+place);
 }
