@@ -16,5 +16,6 @@ typedef struct Request{
 	char *body;
 	LinkedList *headers;
 }Request;
-void listenServer(void (*example)(struct Request*, struct Response*));
+void listenServer(/*void (*example)(struct Request*, struct Response*)*/);
 char *getHeaderByName(char *value, struct Request *req);
+void addRout(char *URL, void (*handler)(Request*, Response*));

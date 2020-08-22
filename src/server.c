@@ -9,10 +9,12 @@
 #include <unistd.h>
 #include "./server.h"
 #include "./util.h"
+#include "./map.h"
 
 #define CHUNKS 50
 
 int listenfd = 0;
+map *routes;
 
 struct Header {
 	char *name;
@@ -63,6 +65,8 @@ void respToStr(char *dest, struct Response resp){
 
 void initServer(unsigned int port, unsigned int clientsNumb){
 	signal(SIGINT, interrupt_signal);
+
+	routes = initMap();
 
 	struct sockaddr_in serv_addr;
 	//make standart response
@@ -133,7 +137,7 @@ void requestParser(char *text, struct Request *req){
 	req->headers = headers;
 }
 
-void listenServer(void (*example)(struct Request*, struct Response*)){
+void listenServer(/*void (*example)(struct Request*, struct Response*)*/){
 	int connfd = 0;
 	//char *sendBuff = (char *)malloc(1024*sizeof(char));
 
@@ -177,7 +181,9 @@ void listenServer(void (*example)(struct Request*, struct Response*)){
 		}
 		//request completed!
 		//put here user's func
-		example(&req,&stdResp);
+		//example(&req,&stdResp);
+		void (*handler)(Request*, Response*) = getFromMap(routes, req.URL, strlen(req.URL));
+		handler(&req, &stdResp);
 		respToStr(sendBuff,stdResp);
 
 		write(connfd, sendBuff, strlen(sendBuff));
@@ -195,4 +201,8 @@ char *getHeaderByName(char *value, struct Request *req){
 		return "0";
 	struct Header *header = (struct Header*)headNode->data;
 	return header->value;
+}
+
+void addRout(char *URL, void (*handler)(Request*,Response*)){
+	addToMap(routes, URL, handler, strlen(URL), sizeof(handler));
 }

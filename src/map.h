@@ -1,4 +1,4 @@
 typedef void* map;
-map *initMap(int size);
-void addToMap(map *dest, void *a, int size);
+map *initMap();
+void addToMap(map *dest, void *key, void *value, int Ksize, int Vsize);
 void *getFromMap(map *from, void *a, int size);

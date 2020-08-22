@@ -11,20 +11,21 @@ void example(Request *req, Response *res){
 	res->body=html;
 }
 
-void testfunc(char *anima){
-	printf("%s\n\n\n",anima);
+void testfunc(char *anima, char *anime){
+	printf("%s\n%s\n\n",anima,anime);
 }
 
 int main(){
-	map *test = initMap(sizeof(char));
-	addToMap(test, testfunc, sizeof(testfunc));
-	void (*anime)(char*);
-	anime = getFromMap(test,testfunc, sizeof(testfunc));
-	anime("holy shit");
+	/*map *test = initMap();
+	addToMap(test, "anime", testfunc, 5, sizeof(testfunc));
+	void (*anime)(char*, char*);
+	anime = getFromMap(test, "anime", 5);
+	anime("holy shit", "anime");*/
 
 
 	initServer(PORT, 10);
-	listenServer(example);
+	addRout("/\0", example);
+	listenServer();
 
 	return 0;
 }
